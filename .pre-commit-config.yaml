@@ -26,7 +26,6 @@ repos:
     rev: v4.5.0
     hooks:
       - id: check-added-large-files
-        exclude: ^apps/certificates/static
       - id: check-merge-conflict
       - id: check-json
       - id: check-yaml
