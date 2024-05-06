@@ -1,8 +1,8 @@
 ## Checkbox Project
-## Overview
+### Overview
 The Checkbox project leverages a modern technology stack to deliver a fast and secure API service. Built with FastAPI, it benefits from asynchronous request handling and automatic data validation using Pydantic models. This project is ideal for applications requiring robust database interactions and secure authentication mechanisms.
 
-## Technology Stack and Features
+### Technology Stack and Features
 
 - ⚡ [**FastAPI**](https://fastapi.tiangolo.com) for the Python backend API.
     - 🧰 [SQLModel](https://sqlmodel.tiangolo.com) for the Python SQL database interactions (ORM).
