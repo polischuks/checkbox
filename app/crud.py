@@ -1,13 +1,13 @@
-from sqlalchemy.orm import Session
 from passlib.context import CryptContext
+from sqlalchemy.orm import Query, Session
 
-from .models import User, Product, Receipt, SaleItem
-from .schemas import UserCreate, ReceiptCreate
+from .models import Product, Receipt, SaleItem, User
+from .schemas import ReceiptCreate, UserCreate
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def get_user_by_username(db: Session, username: str):
+def get_user_by_username(db: Session, username: str) -> User | None:
     """Get user by username
 
     Args:
@@ -17,7 +17,7 @@ def get_user_by_username(db: Session, username: str):
     return db.query(User).filter(User.username == username).first()
 
 
-def create_user(db: Session, user: UserCreate):
+def create_user(db: Session, user: UserCreate) -> User:
     """Create a new user in the database
 
     Args:
@@ -25,14 +25,16 @@ def create_user(db: Session, user: UserCreate):
         user (UserCreate): UserCreate schema
     """
     hashed_password = pwd_context.hash(user.password)
-    db_user = User(name=user.name, username=user.username, hashed_password=hashed_password)
+    db_user = User(
+        name=user.name, username=user.username, hashed_password=hashed_password
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
 
 
-def get_receipts_by_user(db: Session, user_id: int):
+def get_receipts_by_user(db: Session, user_id: int) -> Query[Receipt]:
     """Get receipts by user id
 
     Args:
@@ -42,7 +44,9 @@ def get_receipts_by_user(db: Session, user_id: int):
     return db.query(Receipt).filter(Receipt.user_id == user_id)
 
 
-def get_receipt_by_user_and_id(db: Session, receipt_id: int, user_id: int):
+def get_receipt_by_user_and_id(
+    db: Session, receipt_id: int, user_id: int
+) -> Receipt | None:
     """Get receipt by user id and receipt id
 
     Args:
@@ -50,10 +54,14 @@ def get_receipt_by_user_and_id(db: Session, receipt_id: int, user_id: int):
         receipt_id (int): Receipt id
         user_id (int): User id
     """
-    return db.query(Receipt).filter(Receipt.id == receipt_id, Receipt.user_id == user_id).first()
+    return (
+        db.query(Receipt)
+        .filter(Receipt.id == receipt_id, Receipt.user_id == user_id)
+        .first()
+    )
 
 
-def create_receipt(db: Session, receipt: ReceiptCreate, user: User):
+def create_receipt(db: Session, receipt: ReceiptCreate, user: User) -> Receipt:
     """Create a new receipt in the database
     and add sale items to the receipt
 
@@ -67,7 +75,7 @@ def create_receipt(db: Session, receipt: ReceiptCreate, user: User):
         payment_type=receipt.payment_type,
         payment_amount=receipt.payment_amount,
         total=0,  # Initialize total to zero; it will be calculated based on sale items
-        change_given=0  # Initialize change given, will be updated later
+        change_given=0,  # Initialize change given, will be updated later
     )
     db.add(new_receipt)
     db.flush()
@@ -81,7 +89,7 @@ def create_receipt(db: Session, receipt: ReceiptCreate, user: User):
                 product_id=product.id,
                 quantity=item_data.quantity,
                 total_price=total_price,
-                receipt=new_receipt
+                receipt=new_receipt,
             )
             db.add(sale_item)
             total += total_price  # Update total as each item is added
@@ -95,7 +103,7 @@ def create_receipt(db: Session, receipt: ReceiptCreate, user: User):
     return new_receipt
 
 
-def get_receipt_by_id(db: Session, receipt_id: int):
+def get_receipt_by_id(db: Session, receipt_id: int) -> Receipt | None:
     """Get receipt by id
 
     Args:

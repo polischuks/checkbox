@@ -2,20 +2,15 @@ from collections.abc import Generator
 
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-
-from jose import jwt, JWTError
-
+from jose import JWTError, jwt
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session
-from sqlalchemy.orm import sessionmaker
-
+from sqlalchemy.orm import Session, sessionmaker
 from starlette import status
 
 from app import logger
-from app.models import User
 from app.core.config import settings
-
+from app.models import User
 
 logger = logger.get_logger()
 
@@ -40,7 +35,9 @@ def get_db() -> Generator[Session, None, None]:
         yield session
 
 
-def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+def get_current_user(
+    db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
+):
     """Get the current user.
 
     Args:
@@ -54,7 +51,6 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
     )
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
-        logger.info(f"payload: {payload}")
         user_name: str = payload.get("sub")
         if user_name is None:
             raise credentials_exception

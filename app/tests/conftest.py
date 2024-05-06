@@ -12,7 +12,9 @@ from app.tests.utils.utils import get_token_headers
 
 @pytest.fixture(scope="session")
 def engine():
-    return create_engine(str(settings.SQLALCHEMY_DATABASE_URI), isolation_level="READ_COMMITTED")
+    return create_engine(
+        str(settings.SQLALCHEMY_DATABASE_URI), isolation_level="READ_COMMITTED"
+    )
 
 
 @pytest.fixture(scope="function")
@@ -37,4 +39,3 @@ def client() -> Generator[TestClient, None, None]:
 @pytest.fixture(scope="module")
 def logged_user(client: TestClient) -> dict[str, str]:
     return get_token_headers(client)
-

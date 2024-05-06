@@ -1,21 +1,25 @@
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
-from typing import List, Optional
 from datetime import datetime
-from app import models, schemas, crud
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app import crud
+from app import logger as log
+from app import schemas
 from app.dependencies import get_current_user, get_db
 from app.models import Receipt, User
-from app.schemas import ReceiptResponse
 
-from app import logger
-logger = logger.get_logger()
+logger = log.get_logger()
 
 router = APIRouter()
 
 
 @router.post("/receipts/", response_model=schemas.ReceiptResponse)
-def create_receipt(receipt: schemas.ReceiptCreate, db: Session = Depends(get_db),
-                   user: User = Depends(get_current_user)):
+def create_receipt(
+    receipt: schemas.ReceiptCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> schemas.ReceiptResponse:
     """Create a new receipt in the database.
 
     Args:
@@ -29,17 +33,17 @@ def create_receipt(receipt: schemas.ReceiptCreate, db: Session = Depends(get_db)
     return crud.create_receipt(db=db, receipt=receipt, user=user)
 
 
-@router.get("/receipts/", response_model=List[schemas.Receipt])
+@router.get("/receipts/", response_model=list[schemas.Receipt])
 def read_receipts(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    date_from: Optional[datetime] = None,
-    date_to: Optional[datetime] = None,
-    min_total: Optional[float] = None,
-    payment_type: Optional[str] = None,
+    date_from: datetime | None = None,
+    date_to: datetime | None = None,
+    min_total: float | None = None,
+    payment_type: str | None = None,
     skip: int = 0,
-    limit: int = 10
-):
+    limit: int = 10,
+) -> list[schemas.Receipt]:
     """Get receipts by user id. Optionally filter by date, total, and payment type.
 
     Args:
@@ -53,7 +57,7 @@ def read_receipts(
         limit (int, optional): Limit records. Defaults to 10.
 
     Returns:
-        List[ReceiptResponse]: List of receipts.
+        List[Receipt]: List of receipts.
     """
     query = crud.get_receipts_by_user(db=db, user_id=user.id)
 
@@ -71,7 +75,11 @@ def read_receipts(
 
 
 @router.get("/receipts/{receipt_id}/", response_model=schemas.Receipt)
-def read_receipt(receipt_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def read_receipt(
+    receipt_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> schemas.Receipt | None:
     """Get a receipt by user id and receipt id.
 
     Args:
@@ -82,14 +90,18 @@ def read_receipt(receipt_id: int, db: Session = Depends(get_db), user: User = De
     Returns:
         ReceiptResponse: Receipt data.
     """
-    receipt = crud.get_receipt_by_user_and_id(db=db, receipt_id=receipt_id, user_id=user.id)
+    receipt = crud.get_receipt_by_user_and_id(
+        db=db, receipt_id=receipt_id, user_id=user.id
+    )
     if not receipt:
         raise HTTPException(status_code=404, detail="Receipt not found")
     return receipt
 
 
 @router.get("/receipts/public/{receipt_id}", response_model=schemas.Receipt)
-def get_receipt_public(receipt_id: int, db: Session = Depends(get_db)):
+def get_receipt_public(
+    receipt_id: int, db: Session = Depends(get_db)
+) -> schemas.Receipt:
     """Get a receipt by id.
 
     Args:
@@ -106,7 +118,7 @@ def get_receipt_public(receipt_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/receipts/{receipt_id}/text")
-def get_receipt_text(receipt_id: int, db: Session = Depends(get_db)):
+def get_receipt_text(receipt_id: int, db: Session = Depends(get_db)) -> str:
     """Get a receipt text by id.
 
     Args:

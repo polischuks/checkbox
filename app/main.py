@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from app import logger
-from app.api.endpoints import receipt, auth
+from app.api.endpoints import auth, receipt
 from app.core.config import settings
 from app.models import create_tables
 
@@ -26,11 +26,13 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
+
 @app.on_event("startup")
-async def startup_event():
+async def startup_event() -> None:
     """Create tables when the app starts up."""
     logger.info("Creating tables...")
     create_tables()
+
 
 app.include_router(receipt.router)
 app.include_router(auth.router)
